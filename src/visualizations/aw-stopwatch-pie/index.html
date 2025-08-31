@@ -1,0 +1,93 @@
+<!-- this visualization uses vue to show a tree of stopwatch events -->
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>AW Stopwatch Tree</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style id="viz-base-styles">
+        /* basic styles */
+        html,
+        body {
+            margin: 0;
+        }
+        :root {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --legendColor: #e8ecf1;
+            }
+        }
+    </style>
+    
+    <!-- import axios for the aw client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script>
+        // small hack so aw-client (which expects a bundler) can find axios
+        const exports = {};
+        function require ( name ) {
+            if ( name === 'axios' ) return axios;
+            throw new Error( "Cannot find module '" + name + "'" );
+        }
+    </script>
+    <!-- import the aw client to fetch data -->
+    <script src="https://cdn.jsdelivr.net/npm/aw-client@0.3.4/out/aw-client.min.js"></script>
+    <script>
+        // ======== fetch data using the activitywatch client ========
+        const urlParams = new URLSearchParams( window.location.search );
+        const start = urlParams.get( 'start' );
+        const end = urlParams.get( 'end' );
+        // 
+        const client = new AWClient( 'aw-custom-viz', { baseURL: window.location.origin } );
+        async function queryActivityWatchData () {
+            // query stopwatch events intersecting with not-afk
+            // note: expects ?start=...&end=... in the url
+            const ranges = ( start && end ) ? [ `${ start }/${ end }` ] : [ '' ];
+            const q = `afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
+                stop_events = query_bucket(find_bucket("aw-stopwatch"));
+                stop_events = filter_period_intersect(stop_events, filter_keyvals(afk_events, "status", ["not-afk"]));
+                RETURN = sort_by_duration(stop_events);`;
+            try {
+                const resp = await client.query( ranges, [ q ] );
+                return Array.isArray( resp ) ? resp[ 0 ] : [];
+            } catch ( err ) {
+                console.error( 'AW query failed:', err );
+                return [];
+            }
+        }
+    </script>
+    
+    <!-- import the base visualization scripts -->
+    <script src="index.js"></script>
+</head>
+
+
+<body>
+    
+    <!-- set the `viz-container` id to the innermost shape defining element -->
+    <div id="viz-container" class="aw-pie" aria-label="Time by Label (AW Stopwatch)">
+        <canvas id="aw-pie-canvas"></canvas>
+    </div>
+    
+    <!-- load the scripts and styles for the visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+    <link rel="stylesheet" href="styles.css">
+    <script src="scripts.js"></script>
+
+    <script>
+        let eventData = [];
+        document.addEventListener( 'DOMContentLoaded', () => {
+            queryActivityWatchData().then( result => {
+                eventData = result;
+                renderVisualization(eventData);
+            });
+        });
+    </script>
+</body>
+
+</html>

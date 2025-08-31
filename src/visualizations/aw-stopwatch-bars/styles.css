@@ -1,0 +1,22 @@
+html,
+body {
+    height: auto;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+
+.aw-pie {
+    padding: 8px 0;
+}
+
+.aw-pie > canvas {
+    display: block;
+    width: 100%;
+    margin-inline: auto;
+}

@@ -1,0 +1,20 @@
+[server]
+#host = "localhost"
+#port = "5600"
+#storage = "peewee"
+#cors_origins = ""
+
+[server.custom_static]
+aw-custom-viz-sandbox = "/Users/manderson/Library/Application Support/activitywatch/aw-custom/aw-stopwatch-sandbox"
+aw-custom-viz-bars = "/Users/manderson/Library/Application Support/activitywatch/aw-custom/aw-stopwatch-bars"
+aw-custom-viz-pie = "/Users/manderson/Library/Application Support/activitywatch/aw-custom/aw-stopwatch-pie"
+aw-custom-viz-timeline = "/Users/manderson/Library/Application Support/activitywatch/aw-custom/aw-stopwatch-timeline"
+aw-custom-viz-tree = "/Users/manderson/Library/Application Support/activitywatch/aw-custom/aw-stopwatch-tree"
+
+[server-testing]
+#host = "localhost"
+#port = "5666"
+#storage = "peewee"
+#cors_origins = ""
+
+[server-testing.custom_static]

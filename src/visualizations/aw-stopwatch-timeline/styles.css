@@ -1,0 +1,115 @@
+
+/* Custom styles for the responsive calendar */
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    font-family: 'Inter', sans-serif;
+    /* background-color: transparent; */
+    /* slate-50 */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* max-width: 313px; */
+    /* max-height: 384px; */
+}
+
+#viz-container {
+    min-height: 480px;
+}
+
+.viz-wrapper {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    /* padding: 1rem; */
+}
+
+.calendar-wrapper {
+    width: 100%;
+    height: 100%;
+    /* max-width: 800px; */
+    /* max-height: 600px; */
+    /* background: white; */
+    border-radius: 8px;
+    border: 1px solid;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+
+#calendar-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-header {
+    /* padding: 0.5rem; */
+    border-bottom: 1px solid currentcolor;
+    flex-shrink: 0;
+}
+
+.calendar-body {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+/* Responsive font sizes */
+.day-label {
+    font-size: clamp(0.625rem, 1.5vw, 0.875rem);
+    font-weight: 600;
+    text-align: center;
+}
+
+.hour-line {
+    border-top: 1px solid currentcolor;
+    opacity: 0.4;
+}
+
+.day-column {
+    border-right: 1px solid currentcolor;
+    opacity: 0.7;
+}
+
+.day-column:last-child {
+    border-right: none;
+}
+
+.event-block {
+    /* border-radius: 3px; */
+    border-radius: 1px;
+    font-size: clamp(0.5rem, 1vw, 0.75rem);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(1,1,1,0.06);
+    display: flex;
+    align-items: center;
+}
+.event-block-label {
+    /* display: none; */
+    color: currentColor;
+    margin-left: 3px;
+}
+
+.hour-label {
+    position: absolute;
+    font-size: 0.5rem;
+    /* left: .1rem; */
+    right: .1rem;
+    /* absolute left-1 text-xs text-slate-400" style="top: 20%; transform: translateY(-20%); */
+}
+/* Maintain aspect ratio for iframe */
+@media (max-width: 768px) {
+    .container {
+        padding: 0.5rem;
+    }
+}
