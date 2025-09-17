@@ -46,10 +46,12 @@
             // query stopwatch events intersecting with not-afk
             // note: expects ?start=...&end=... in the url
             const ranges = ( start && end ) ? [ `${ start }/${ end }` ] : [ '' ];
-            const q = `afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
-                stop_events = query_bucket(find_bucket("aw-stopwatch"));
-                stop_events = filter_period_intersect(stop_events, filter_keyvals(afk_events, "status", ["not-afk"]));
-                RETURN = sort_by_duration(stop_events);`;
+            const q = `all_stopwatch_events = query_bucket(find_bucket("aw-stopwatch"));
+                all_afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
+                deduped_flooded_afk = flood(all_afk_events);
+                filtered_afk_events = filter_keyvals(deduped_flooded_afk, "status", ["not-afk"]);
+                working_events = filter_period_intersect(all_stopwatch_events, filtered_afk_events);
+                RETURN = sort_by_timestamp(working_events);`;
             try {
                 const resp = await client.query( ranges, [ q ] );
                 return Array.isArray( resp ) ? resp[ 0 ] : [];
