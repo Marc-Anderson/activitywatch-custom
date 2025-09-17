@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# this script has two modes: start and stop
+# this script has two modes: start and stop, which is determined by the `KMVAR_Local_Task_Mode` environment variable.
 # start mode: it checks the `KMVAR_Local_Task_Label` environment variable to determine the current task label, then stops the currently running event (if any) and creates a new stopwatch event with that label in activitywatch using the activitywatch api. it then prints `task started: {task_label}` to the console.
 # stop mode: it stops the most recent event and prints `task stopped: {task_label}` to the console.
 
@@ -11,7 +11,7 @@ import urllib.request
 import sys
 
 # MODE = "start"
-MODE = "stop"
+# MODE = "stop"
 
 # region system
 
@@ -23,7 +23,7 @@ def exit_with_error_message(msg):
 
 def call_api(endpoint, dict_data=None, params=None, method="GET"):
     # define the url and headers for the request
-    base_url = ""
+    base_url = "http://localhost:5600/api/0/buckets/"
     # base_url = 'http://localhost:5600/api/0/buckets/aw-stopwatch/'
     headers = {"Content-Type": "application/json"}
     url = f"{base_url}{endpoint}"
@@ -74,7 +74,7 @@ def get_bucket_events(bucket_id, start=None, end=None, limit=None):
     """
     Fetch events from the specified bucket using a GET request.
     """
-    url = f"http://localhost:5600/api/0/buckets/{bucket_id}/events"
+    endpoint = f"{bucket_id}/events"
     params = {}
     if start is not None:
         params["start"] = start.isoformat()
@@ -83,7 +83,7 @@ def get_bucket_events(bucket_id, start=None, end=None, limit=None):
     if limit is not None:
         params["limit"] = str(limit)
 
-    response = call_api(url, params=params)
+    response = call_api(endpoint, params=params)
 
     return response
 
@@ -114,7 +114,7 @@ def stopwatch_stop_event(raise_data_errors=True) -> dict:
 
     # format the update call
     # url = f"http://localhost:5600/api/0/buckets/aw-stopwatch/events/{event_id}"
-    url = f"http://localhost:5600/api/0/buckets/aw-stopwatch/heartbeat?pulsetime=1"
+    endpoint = f"aw-stopwatch/heartbeat?pulsetime=1"
     # url = f"http://localhost:5600/api/0/buckets/aw-stopwatch/events"
     payload = {
         "id": event_data["id"],
@@ -122,7 +122,7 @@ def stopwatch_stop_event(raise_data_errors=True) -> dict:
         "duration": duration,
         "data": {"running": False, "label": event_data["data"]["label"]},
     }
-    response = call_api(url, dict_data=payload, method="POST")
+    response = call_api(endpoint, dict_data=payload, method="POST")
     return response
 
 
@@ -132,13 +132,12 @@ def stopwatch_create_event(label: str = "not specified") -> dict:
     stopwatch_stop_event(raise_data_errors=False)
     #
     iso_now = datetime.now(timezone.utc).isoformat()
-    url = "http://localhost:5600/api/0/buckets/aw-stopwatch/events"
-    headers = {"Content-Type": "application/json"}
+    endpoint = "aw-stopwatch/events"
     payload = {
         "timestamp": iso_now,
         "data": {"running": True, "label": label},
     }
-    response = call_api(url, dict_data=payload, method="POST")
+    response = call_api(endpoint, dict_data=payload, method="POST")
 
     return response
 
@@ -148,6 +147,13 @@ def stopwatch_create_event(label: str = "not specified") -> dict:
 
 # Extract and print the assistant's message.
 try:
+
+    MODE = os.environ.get("KMVAR_Local_Task_Mode", "unspecified")
+
+    if MODE not in ["start", "stop"]:
+        exit_with_error_message(
+            f"invalid or missing mode({MODE}). must be 'start' or 'stop'."
+        )
 
     if MODE == "start":
 
@@ -179,5 +185,8 @@ except (KeyError, TypeError, IndexError) as e:
 except Exception as err:
     exit_with_error_message(f"An error occurred: {err}")
 
+# clear the environment variables so that they don't persist for the next run
+os.environ["KMVAR_Local_Task_Mode"] = ""
+os.environ["KMVAR_Local_Task_Label"] = ""
 
 print(f"task {action}: {task_label}")
