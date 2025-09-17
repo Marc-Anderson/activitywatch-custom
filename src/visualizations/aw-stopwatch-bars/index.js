@@ -292,10 +292,12 @@ function stringHashToColor(str){
 // const end = urlParams.get( 'end' );
 // // 
 // const client = new AWClient( 'aw-custom-viz', { baseURL: window.location.origin } );
-// const DEFAULT_AWQUERY = `afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
-//     stop_events = query_bucket(find_bucket("aw-stopwatch"));
-//     stop_events = filter_period_intersect(stop_events, filter_keyvals(afk_events, "status", ["not-afk"]));
-//     RETURN = sort_by_duration(stop_events);`;
+// const DEFAULT_AWQUERY = `all_stopwatch_events = query_bucket(find_bucket("aw-stopwatch"));
+//     all_afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
+//     deduped_flooded_afk = flood(all_afk_events);
+//     filtered_afk_events = filter_keyvals(deduped_flooded_afk, "status", ["not-afk"]);
+//     working_events = filter_period_intersect(all_stopwatch_events, filtered_afk_events);
+//     RETURN = sort_by_timestamp(working_events);`;
 // async function queryActivityWatchData (query) {
 //     // query stopwatch events intersecting with not-afk
 //     // note: expects ?start=...&end=... in the url

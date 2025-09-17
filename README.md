@@ -202,10 +202,12 @@ You can query data directly in the ActivityWatch ui:
 ### Example Query: Stopwatch Data (filtered by AFK status)
 
 ```sh
-afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
-window_events = query_bucket(find_bucket("aw-stopwatch"));
-window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, "status", ["not-afk"]));
-RETURN = sort_by_duration(window_events);
+all_stopwatch_events = query_bucket(find_bucket("aw-stopwatch"));
+all_afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
+deduped_flooded_afk = flood(all_afk_events);
+filtered_afk_events = filter_keyvals(deduped_flooded_afk, "status", ["not-afk"]);
+working_events = filter_period_intersect(all_stopwatch_events, filtered_afk_events);
+RETURN = sort_by_timestamp(working_events);
 ```
 
 
