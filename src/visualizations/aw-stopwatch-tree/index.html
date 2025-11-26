@@ -36,6 +36,17 @@
     <!-- import the aw client to fetch data -->
     <script src="https://cdn.jsdelivr.net/npm/aw-client@0.3.4/out/aw-client.min.js"></script>
     <script>
+        // ======== clean activitywatch data to remove dupes =========
+        function filterEventsKeepLongestDupeDuration(items) {
+            const map = new Map();
+            for (const item of items) {
+                const key = `${item.id}_${item.timestamp}`;
+                if (!map.has(key) || item.duration > map.get(key).duration) {
+                map.set(key, item);
+                }
+            }
+            return Array.from(map.values());
+        }
         // ======== fetch data using the activitywatch client ========
         const urlParams = new URLSearchParams( window.location.search );
         const start = urlParams.get( 'start' );
@@ -46,13 +57,15 @@
             // query stopwatch events intersecting with not-afk
             // note: expects ?start=...&end=... in the url
             const ranges = ( start && end ) ? [ `${ start }/${ end }` ] : [ '' ];
-            const q = `afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
-                stop_events = query_bucket(find_bucket("aw-stopwatch"));
-                stop_events = filter_period_intersect(stop_events, filter_keyvals(afk_events, "status", ["not-afk"]));
-                RETURN = sort_by_duration(stop_events);`;
+            const q = `all_afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
+                afk_events = filter_keyvals(all_afk_events, "status", ["not-afk"]);
+                all_stopwatch_events = query_bucket(find_bucket("aw-stopwatch"));
+                working_events = filter_period_intersect(all_stopwatch_events, afk_events);
+                RETURN = sort_by_timestamp(working_events);`;
             try {
                 const resp = await client.query( ranges, [ q ] );
-                return Array.isArray( resp ) ? resp[ 0 ] : [];
+                const result = Array.isArray( resp ) ? resp[ 0 ] : [];
+                return filterEventsKeepLongestDupeDuration(result);
             } catch ( err ) {
                 console.error( 'AW query failed:', err );
                 return [];

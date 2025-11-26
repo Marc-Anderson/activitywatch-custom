@@ -4,14 +4,14 @@
 # start mode: it checks the `KMVAR_Local_Task_Label` environment variable to determine the current task label, then stops the currently running event (if any) and creates a new stopwatch event with that label in activitywatch using the activitywatch api. it then prints `task started: {task_label}` to the console.
 # stop mode: it stops the most recent event and prints `task stopped: {task_label}` to the console.
 
+# https://docs.activitywatch.net/en/latest/_modules/aw_server/api.html#ServerAPI.heartbeat
+# https://docs.activitywatch.net/en/latest/_modules/aw_transform/heartbeats.html
 
 import os
 import json
 import urllib.request
 import sys
 
-# MODE = "start"
-# MODE = "stop"
 
 # region system
 
@@ -113,9 +113,9 @@ def stopwatch_stop_event(raise_data_errors=True) -> dict:
     duration = (iso_now - iso_start).total_seconds()
 
     # format the update call
-    # url = f"http://localhost:5600/api/0/buckets/aw-stopwatch/events/{event_id}"
-    endpoint = f"aw-stopwatch/heartbeat?pulsetime=1"
-    # url = f"http://localhost:5600/api/0/buckets/aw-stopwatch/events"
+    # endpoint = f"aw-stopwatch/events/{event_data['id']}"
+    # endpoint = f"aw-stopwatch/heartbeat?pulsetime=1"
+    endpoint = f"aw-stopwatch/events"
     payload = {
         "id": event_data["id"],
         "timestamp": event_data["timestamp"],
@@ -123,6 +123,8 @@ def stopwatch_stop_event(raise_data_errors=True) -> dict:
         "data": {"running": False, "label": event_data["data"]["label"]},
     }
     response = call_api(endpoint, dict_data=payload, method="POST")
+    if not response:
+        response = payload
     return response
 
 
@@ -132,7 +134,7 @@ def stopwatch_create_event(label: str = "not specified") -> dict:
     stopwatch_stop_event(raise_data_errors=False)
     #
     iso_now = datetime.now(timezone.utc).isoformat()
-    endpoint = "aw-stopwatch/events"
+    endpoint = f"aw-stopwatch/heartbeat?pulsetime=1"
     payload = {
         "timestamp": iso_now,
         "data": {"running": True, "label": label},

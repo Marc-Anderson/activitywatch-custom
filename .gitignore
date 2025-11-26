@@ -9,3 +9,4 @@ _archive/
 .venv/
 .env.local
 .env.*.local
+activitywatch_work_hours/
