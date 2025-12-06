@@ -2,6 +2,7 @@
 
 # this script has two modes: start and stop, which is determined by the `KMVAR_Local_Task_Mode` environment variable.
 # start mode: it checks the `KMVAR_Local_Task_Label` environment variable to determine the current task label, then stops the currently running event (if any) and creates a new stopwatch event with that label in activitywatch using the activitywatch api. it then prints `task started: {task_label}` to the console.
+#     when a script is started it will check for a comment in the `KMVAR_Local_Task_Comment` environment variable and include that comment in the new event data if provided.
 # stop mode: it stops the most recent event and prints `task stopped: {task_label}` to the console.
 
 # https://docs.activitywatch.net/en/latest/_modules/aw_server/api.html#ServerAPI.heartbeat
@@ -120,7 +121,7 @@ def stopwatch_stop_event(raise_data_errors=True) -> dict:
         "id": event_data["id"],
         "timestamp": event_data["timestamp"],
         "duration": duration,
-        "data": {"running": False, "label": event_data["data"]["label"]},
+        "data": {**event_data["data"], "running": False},
     }
     response = call_api(endpoint, dict_data=payload, method="POST")
     if not response:
@@ -128,7 +129,7 @@ def stopwatch_stop_event(raise_data_errors=True) -> dict:
     return response
 
 
-def stopwatch_create_event(label: str = "not specified") -> dict:
+def stopwatch_create_event(label: str = "not specified", comment: str = "") -> dict:
     """Create a new stopwatch event by sending a POST request."""
     # stop the previous task
     stopwatch_stop_event(raise_data_errors=False)
@@ -139,6 +140,8 @@ def stopwatch_create_event(label: str = "not specified") -> dict:
         "timestamp": iso_now,
         "data": {"running": True, "label": label},
     }
+    if comment:
+        payload["data"]["comment"] = comment
     response = call_api(endpoint, dict_data=payload, method="POST")
 
     return response
@@ -151,6 +154,7 @@ def stopwatch_create_event(label: str = "not specified") -> dict:
 try:
 
     MODE = os.environ.get("KMVAR_Local_Task_Mode", "unspecified")
+    COMMENT = os.environ.get("KMVAR_Local_Task_Comment", "")
 
     if MODE not in ["start", "stop"]:
         exit_with_error_message(
@@ -167,7 +171,7 @@ try:
             exit_with_error_message("Missing Task Label.")
 
         # create a new stopwatch event
-        message = stopwatch_create_event(label=task_label)
+        message = stopwatch_create_event(label=task_label, comment=COMMENT)
 
         # action
         action = "started"
@@ -190,5 +194,6 @@ except Exception as err:
 # clear the environment variables so that they don't persist for the next run
 os.environ["KMVAR_Local_Task_Mode"] = ""
 os.environ["KMVAR_Local_Task_Label"] = ""
+os.environ["KMVAR_Local_Task_Comment"] = ""
 
 print(f"task {action}: {task_label}")

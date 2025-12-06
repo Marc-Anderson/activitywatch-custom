@@ -24,8 +24,10 @@ This project is a work in progress. The visualizations were written with heavy a
     - **Modes:**
         - **Start:**  
             * Reads the current task label from the environment variable `KMVAR_Local_Task_Label`.
+            * Reads the current task comment from the environment variable `KMVAR_Local_Task_Comment`.
             * Stops the most recent stopwatch event if one is running.
             * creates a new stopwatch event with the provided label via the ActivityWatch api.
+                * if a comment was provided it adds the comment to the event
             * Prints `task started: {task_label}` to the console.
         - **Stop:**  
             * Stops the most recent stopwatch event.
@@ -44,6 +46,7 @@ This project is a work in progress. The visualizations were written with heavy a
 
         3. Keyboard Maestro sets the task label to the environment variable `KMVAR_Local_Task_Label`
             * this is just how keyboard maestro works, not a deliberate decision on my part
+            * it also sets the comment to `KMVAR_Local_Task_Comment` if provided
         4. Keyboard Maestro calls the Python script
         5. The script loads the environment variable.
         6. The script submits the event to ActivityWatch.
